@@ -15,12 +15,12 @@ class InvontorySerializer(serializers.ModelSerializer):
         ]
 
 class StockTransactionSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(read_only=100)
+    product = ProductSerializer(read_only=True)
     
     class Meta:
         model = StockTransaction
         fields = [
-            'id', 'product', 'transaction_type', 'queantity', 'created_at'
+            'id', 'product', 'transaction_type', 'quantity', 'created_at'
         ]
         read_only_fields = [
             'id', 'product', 'transaction_type', 'quantity', 'created_at'
