@@ -7,6 +7,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from inventory.models import Inventory, StockTransaction
 from rest_framework.response import Response
+from audit.models import AuditLog
 
 
 class SalesOrderListCreateView(generics.ListCreateAPIView):
@@ -61,6 +62,8 @@ class ConfirmOrderView(APIView):
             order.status = 'CONFIRMED'
             order.save()
             
+            AuditLog.objects.create(user=request.user, action='ORDER_CONFIRMED', entity_type='SalesOrder', entity_id=order.id, details={'status': order.status})
+            
             return Response(
                 {
                     'detail': ('Order confirmed successfully'),
@@ -68,3 +71,30 @@ class ConfirmOrderView(APIView):
                     'status': order.status
                 }, status=status.HTTP_200_OK
             )
+            
+class ProcessOrderView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    @transaction.atomic
+    def post(self, request, pk):
+        order = get_object_or_404(SalesOrder, id=pk)
+        
+        if order.status != 'CONFIRMED':
+            return Response(
+                {
+                    'detail': 'Only confirmed orders can be moved to processing'
+                }, status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        order.status = 'PROCESSING',
+        order.save()
+        AuditLog.objects.create(user=request.user, action='ORDER_PROCESSING', entity_type='SalesOrder', entity_id=order.id, details={'status': order.status})
+        
+        return Response(
+            {
+                'message' : 'Order moved to processing successfully',
+                'order_id': order.id,
+                'status': order.status
+            }, status=status.HTTP_200_OK
+        )
+        
