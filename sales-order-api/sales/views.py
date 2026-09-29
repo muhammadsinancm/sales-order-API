@@ -45,3 +45,8 @@ class SalesOrderListCreateView(generics.ListCreateAPIView):
         order.save()
         
         serializer.instance = order
+        
+class SalesOrderDetailView(generics.RetrieveAPIView):
+    queryset = SalesOrder.objects.all()
+    serializer_class = SalesOrderSerializer
+    permission_classes = [IsAuthenticated]
