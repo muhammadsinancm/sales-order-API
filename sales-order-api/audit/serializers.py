@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import AuditLog
 
-class AuditSerializer(serializers.ModelSerializer):
+class AuditLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = AuditLog
         fields = [
