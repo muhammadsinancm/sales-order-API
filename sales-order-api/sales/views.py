@@ -126,3 +126,51 @@ class CompleteOrderView(APIView):
                 'status' : order.status
             }, status=status.HTTP_200_OK
         )
+    
+class CancelOrderView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    @transaction.atomic
+    def post(self, request, pk):
+        order = get_object_or_404(SalesOrder, pk=pk)
+        
+        if order.status in ['COMPLETED', 'CANCELLED']:
+            return Response(
+                {
+                    'detail' : 'This order can not be cancelled'
+                }, status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        if order.status in ['CONFIRMED', 'PROCESSING']:
+            items = order.items.select_related('product')
+            
+            for item in items:
+              inventory = (Inventory.objects.select_for_update().filter(product=item.product).first())
+              
+              if inventory is None:
+                  return Response(
+                      {
+                          'detail': f"No inventory found for {item.product.name}"
+                      }, status=status.HTTP_400_BAD_REQUEST
+                  )
+                
+            inventory.quantity += item.quantity
+            inventory.save()
+            
+            StockTransaction.objects.create(product=item.product, transaction_type='IN', quantity=item.quantity)
+        
+        order.status = 'CANCELLED'
+        order.save()
+        
+        AuditLog.objects.create(
+            user=request.user, action='ORDER_CANCELLED', entity_type='SalesOrder', entity_id=order.id, detail={'status' : order.status}
+        )
+        
+        return Response(
+            {
+                'message' : 'Order cancelled successfully',
+                'order_id' : order.id,
+                'status' : order.status
+            }, status=status.HTTP_200_OK
+        )
+            
