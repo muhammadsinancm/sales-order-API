@@ -178,7 +178,7 @@ class CancelOrderView(APIView):
         order.save()
         
         AuditLog.objects.create(
-            user=request.user, action='ORDER_CANCELLED', entity_type='SalesOrder', entity_id=order.id, detail={'status' : order.status}
+            user=request.user, action='ORDER_CANCELLED', entity_type='SalesOrder', entity_id=order.id, details={'status' : order.status}
         )
         
         return Response(
