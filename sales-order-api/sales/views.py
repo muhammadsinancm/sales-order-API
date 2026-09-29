@@ -8,12 +8,27 @@ from django.shortcuts import get_object_or_404
 from inventory.models import Inventory, StockTransaction
 from rest_framework.response import Response
 from audit.models import AuditLog
-
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import OrderingFilter
 
 class SalesOrderListCreateView(generics.ListCreateAPIView):
-    queryset = SalesOrder.objects.all()
+    queryset = SalesOrder.objects.all().order_by('-created_at')
     serializer_class = SalesOrderSerializer
     permission_classes = [IsAuthenticated]
+    
+    filter_backends = [
+        DjangoFilterBackend, OrderingFilter
+    ]
+    
+    filterset_fields = [
+        'status', 'customer'
+    ]
+    
+    ordering_fields = [
+        'created_at', 'grand_total', 'status'
+    ]
+    
+    ordering = ['-created_at']
         
 class SalesOrderDetailView(generics.RetrieveAPIView):
     queryset = SalesOrder.objects.all()
