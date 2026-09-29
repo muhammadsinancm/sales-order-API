@@ -86,7 +86,7 @@ class ProcessOrderView(APIView):
                 }, status=status.HTTP_400_BAD_REQUEST
             )
         
-        order.status = 'PROCESSING',
+        order.status = 'PROCESSING'
         order.save()
         AuditLog.objects.create(user=request.user, action='ORDER_PROCESSING', entity_type='SalesOrder', entity_id=order.id, details={'status': order.status})
         
@@ -98,3 +98,31 @@ class ProcessOrderView(APIView):
             }, status=status.HTTP_200_OK
         )
         
+class CompleteOrderView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    @transaction.atomic
+    def post(self, request, pk):
+        order = get_object_or_404(SalesOrder, pk=pk)
+        
+        if order.status != 'PROCESSING':
+            return Response(
+                {
+                    'detail' : 'Only processing orders can be completed'
+                }, status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        order.status = 'COMPLETED'
+        order.save()
+        
+        AuditLog.objects.create(
+            user=request.user, action='ORDER_COMPLETED', entity_type='SalesOrder', entity_id=order.id, details={'status' : order.status}
+        )
+        
+        return Response(
+            {
+                'message': 'Order completed successfully',
+                'order_id' : order.id,
+                'status' : order.status
+            }, status=status.HTTP_200_OK
+        )
