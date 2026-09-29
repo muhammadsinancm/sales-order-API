@@ -54,3 +54,36 @@ class StockInView(APIView):
             },
             status=status.HTTP_200_OK
         )
+        
+class StockOutView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    @transaction.atomic
+    def post(self, reqeust):
+        serializer = StockMovementSerializer(data=reqeust.data)
+        serializer.is_valid(raise_exception=True)
+        
+        product_id = serializer.validated_data['product_id']
+        quantity = serializer.validated_data['quantity']
+        
+        product = get_object_or_404(Product, id=product_id)
+        
+        inventory = Inventory.objects.select_for_update().filter(product=product).first()
+        
+        if inventory is None:
+            return Response({'detail': 'No inventory found for this product.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if inventory.quantity < quantity:
+            return Response({'detail': 'Insufficient stock'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        inventory.quantity -= quantity
+        inventory.save()
+        
+        StockTransaction.objects.create(product=product, transaction_type='OUT', quantity=quantity)
+        
+        return Response({
+            'message': 'Stock removed successfully',
+            'product_id': product.id,
+            'quantity_removed': quantity,
+            'current_stock': inventory.quantity
+            }, status=status.HTTP_200_OK)
