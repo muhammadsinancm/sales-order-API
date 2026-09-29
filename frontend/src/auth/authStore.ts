@@ -14,4 +14,7 @@ export function getRefreshToken() {
     return localStorage.getItem('refresh_token')
 }
 
-export
+export function clearToken() {
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
+}
