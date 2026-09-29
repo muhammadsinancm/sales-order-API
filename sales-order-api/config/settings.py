@@ -30,11 +30,12 @@ INSTALLED_APPS = [
     
     'rest_framework',
     'django_filters',
+    'drf_spectacular'
     'accounts',
     'customers',
     'products',
     'inventory',
-    'sales'
+    'sales',
 ]
 
 MIDDLEWARE = [
