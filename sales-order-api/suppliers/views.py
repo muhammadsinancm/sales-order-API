@@ -6,9 +6,9 @@ from .serializers import SupplierSerializer
 class SupplierListCreateView(generics.ListAPIView):
     queryset = Supplier.objects.all()
     serializer_class = SupplierSerializer
-    pagination_class = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     
 class SupplierDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Supplier.objects.all()
     serializer_class = SupplierSerializer
-    pagination_class = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
