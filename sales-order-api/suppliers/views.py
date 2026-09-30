@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Supplier
 from .serializers import SupplierSerializer
 
-class SupplierListCreateView(generics.ListAPIView):
+class SupplierListCreateView(generics.ListCreateAPIView):
     queryset = Supplier.objects.all()
     serializer_class = SupplierSerializer
     permission_classes = [IsAuthenticated]
