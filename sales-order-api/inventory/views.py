@@ -7,13 +7,14 @@ from products.models import Product
 from .models import Inventory, StockTransaction
 from .serializers import (InvontorySerializer, StockTransactionSerializer, StockMovementSerializer)
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema
 
 class InventoryDetailView(generics.RetrieveAPIView):
-    queryset = Inventory.objects.select_for_update('product')
+    queryset = Inventory.objects.select_related('product')
     serializer_class = InvontorySerializer
     permission_classes = [IsAuthenticated]
     lookup_field = 'product_id'
- 
+
     # def get_object(self):
     #     product_id = self.kwargs['product_id']
     #     product = Product.objects.get(id=product_id)
@@ -28,6 +29,7 @@ class StockTransactionListView(generics.ListAPIView):
         product_id = self.kwargs['product_id']
         return StockTransaction.objects.filter(product_id=product_id).select_related('product').order_by('-created_at')
     
+@extend_schema(request=StockMovementSerializer)
 class StockInView(generics.CreateAPIView):
     serializer_class = StockMovementSerializer
     permission_classes = [IsAuthenticated]
@@ -67,7 +69,8 @@ class StockInView(generics.CreateAPIView):
             },
             status=status.HTTP_200_OK
         )
-        
+
+@extend_schema(request=StockMovementSerializer)
 class StockOutView(generics.CreateAPIView):
     serializer_class = StockMovementSerializer
     permission_classes = [IsAuthenticated]
@@ -93,7 +96,7 @@ class StockOutView(generics.CreateAPIView):
         # product = get_object_or_404(Product, id=product_id)
         
         try:
-            inventory = (Inventory.objects.select_for_update().get(product=product))
+            inventory = Inventory.objects.select_for_update().get(product=product)
         
         except Inventory.DoesNotExist:
             return Response(
@@ -102,14 +105,14 @@ class StockOutView(generics.CreateAPIView):
                 }, status=status.HTTP_404_NOT_FOUND
             )
             
-            if inventory.quantity < quantity:
-                return Response(
-                    {
-                        'detail' : 'Insufficient stock',
-                        'current_stock' : inventory.quantity,
-                        'requested_queantity' : quantity
-                    }, status=status.HTTP_400_BAD_REQUEST
-                )
+        if inventory.quantity < quantity:
+            return Response(
+                {
+                    'detail' : 'Insufficient stock',
+                    'current_stock' : inventory.quantity,
+                    'requested_queantity' : quantity
+                }, status=status.HTTP_400_BAD_REQUEST
+            )
         
         inventory.quantity -= quantity
         inventory.save()
