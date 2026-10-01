@@ -13,7 +13,7 @@ class SupplierSerializer(serializers.ModelSerializer):
             'id', 'created_at', 'updated_at'
         ]
 
-class REQItemSerializer(serializers.ModelSerializer):
+class RFQItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = RFQItem
         fields = [
@@ -30,7 +30,7 @@ class REQItemSerializer(serializers.ModelSerializer):
         return value
     
 class RequestForQuotationSerializer(serializers.ModelSerializer):
-    items = REQItemSerializer(many=True)
+    items = RFQItemSerializer(many=True)
     class Meta:
         model = RequestForQuotation
         fields = [
