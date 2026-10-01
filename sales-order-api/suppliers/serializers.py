@@ -67,6 +67,6 @@ class RequestForQuotationSerializer(serializers.ModelSerializer):
         
         return instance
     
-class SupplierQuotationItemSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Su
+# class SupplierQuotationItemSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Su
