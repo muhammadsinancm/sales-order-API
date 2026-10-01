@@ -15,9 +15,9 @@ class Migration(migrations.Migration):
             name='REQItem',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('product', models.CharField(max_length=255)),
+                ('product', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='req_items', to='products.product')),
                 ('quantity', models.PositiveIntegerField()),
-                ('ntes', models.TextField(blank=True)),
+                ('notes', models.TextField(blank=True)),
                 ('rfq', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='items', to='suppliers.requestforquotation')),
             ],
         ),
