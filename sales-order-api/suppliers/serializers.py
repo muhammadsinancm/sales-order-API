@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Supplier, RequestForQuotation, RFQItem
+from django.db import transaction
 
 class SupplierSerializer(serializers.ModelSerializer):
     class Meta:
@@ -39,3 +40,12 @@ class RequestForQuotationSerializer(serializers.ModelSerializer):
         read_only_fields = [
             'id', 'created_at', 'updated_at'
         ]
+        
+    @transaction.atomic
+    def create(self, validated_data):
+        items_data = validated_data.pop('items')
+        rfq = RequestForQuotation.objects.create(**validated_data)
+        
+        for item_data in items_data:
+            RFQItem.objects.create(rfq=rfq, **item_data)
+        return rfq
