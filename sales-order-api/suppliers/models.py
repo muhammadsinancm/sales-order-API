@@ -65,4 +65,22 @@ class SupplierQuotation(models.Model):
         return self.quotation_number
     
 class SupplierQuotationItem(models.Model):
-    quitation = models.ForeignKey()
+    quotation = models.ForeignKey(SupplierQuotation, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='supplier_quotation_items')
+    quantity = models.PositiveBigIntegerField()
+    unit_price = models.DecimalField(max_digits=12, decimal_places=2)
+    tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    subtotal = models.DecimalField(max_digits=12, decimal_places=2, editable=False)
+    tax = models.DecimalField(max_digits=12, decimal_places=2, editable=False)
+    total = models.DecimalField(max_digits=12, decimal_places=2, editable=False)
+    
+    def save(self, *args, **kwargs):
+        self.subtotal = self.quantity * self.unit_price
+        self.tax = (self.subtotal * self.tax_rate) / 100
+        self.total = self.subtotal + self.tax
+        super().save(*args, **kwargs)
+        
+    def __str__(self):
+        return f"{self.product.name} - {self.quotation.quotation_number}"
+    
+    
