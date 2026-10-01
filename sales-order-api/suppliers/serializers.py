@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from .models import Supplier, RequestForQuotation, RFQItem
+from .models import Supplier, RequestForQuotation, RFQItem, SupplierQuotation, SupplierQuotationItem
 from django.db import transaction
+from decimal import Decimal
 
 class SupplierSerializer(serializers.ModelSerializer):
     class Meta:
@@ -67,6 +68,28 @@ class RequestForQuotationSerializer(serializers.ModelSerializer):
         
         return instance
     
-# class SupplierQuotationItemSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Su
+class SupplierQuotationItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SupplierQuotationItem
+        fields = [
+            'id', 'product', 'quantity', 'unit_price', 'tax_rate', 'subtotal', 'tax', 'total'
+        ]
+        
+        read_only_fields = [
+            'id', 'subtotal', 'tax', 'total'
+        ]
+        
+        def validate_quantity(self, value):
+            if value <= 0:
+                raise serializers.ValidationError('Quantity must be greater than 0.')
+            return value
+        
+        def validate_unit_price(self, value):
+            if value < 0:
+                raise serializers.ValidationError('Unit price can not be negative.')
+            return value
+        
+        def validate_tax_rate(self, value):
+            if value < 0:
+                raise serializers.ValidationError('Tax rate can not be negative.')
+            return value
