@@ -1,4 +1,5 @@
 from django.db import models
+from products.models import Product
 
 class Supplier(models.Model):
     name = models.CharField(max_length=255)
@@ -28,12 +29,12 @@ class RequestForQuotation(models.Model):
     
     def __str__(self):
         return f"RFQ #{self.id}"
-    
-class REQItem(models.Model):
+
+class RFQItem(models.Model):
     rfq = models.ForeignKey(RequestForQuotation, on_delete=models.CASCADE, related_name='items')
-    product = models.CharField(max_length=255)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='req_items')
     quantity = models.PositiveIntegerField()
-    ntes = models.TextField(blank=True)
+    notes = models.TextField(blank=True)
     
     def __str__(self):
         return f"{self.product.name} - {self.quantity}"
