@@ -23,7 +23,7 @@ class RFQListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save()
         
-class REQDetailView(generics.RetrieveUpdateDestroyAPIView):
+class RFQDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = RequestForQuotation.objects.prefetch_related('items').select_related('supplier')
     serializer_class = RequestForQuotationSerializer
     permission_classes = [IsAuthenticated]
