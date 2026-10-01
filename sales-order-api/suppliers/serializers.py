@@ -66,3 +66,7 @@ class RequestForQuotationSerializer(serializers.ModelSerializer):
                 RFQItem.objects.create(rfq=instance, **item_data)
         
         return instance
+    
+class SupplierQuotationItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Su
