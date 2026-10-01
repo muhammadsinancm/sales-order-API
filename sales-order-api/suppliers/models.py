@@ -28,3 +28,12 @@ class RequestForQuotation(models.Model):
     
     def __str__(self):
         return f"RFQ #{self.id}"
+    
+class REQItem(models.Model):
+    rfq = models.ForeignKey(RequestForQuotation, on_delete=models.CASCADE, related_name='items')
+    product = models.CharField(max_length=255)
+    quantity = models.PositiveIntegerField()
+    ntes = models.TextField(blank=True)
+    
+    def __str__(self):
+        return f"{self.product.name} - {self.quantity}"
