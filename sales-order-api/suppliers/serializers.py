@@ -38,7 +38,7 @@ class RequestForQuotationSerializer(serializers.ModelSerializer):
         ]
         
         read_only_fields = [
-            'id', 'created_at', 'updated_at'
+            'id', 'status', 'created_at', 'updated_at'
         ]
         
     @transaction.atomic
@@ -49,3 +49,20 @@ class RequestForQuotationSerializer(serializers.ModelSerializer):
         for item_data in items_data:
             RFQItem.objects.create(rfq=rfq, **item_data)
         return rfq
+    
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        items_data = validated_data.pop('items', None)
+        
+        instance.supplier = validated_data.get('supplier', instance.supplier)
+        instance.status = validated_data.get('status', instance.status)
+        instance.quotation_date = validated_data.get('quotation_date', instance.quotation_date)
+        instance.notes = validated_data.get('notes', instance.notes)
+        instance.save()
+        
+        if items_data is not None:
+            instance.items.all().delete()
+            for item_data in items_data:
+                RFQItem.objects.create(rfq=instance, **item_data)
+        
+        return instance
