@@ -38,3 +38,6 @@ class RFQItem(models.Model):
     
     def __str__(self):
         return f"{self.product.name} - {self.quantity}"
+    
+class SupplierQuotationItem(models.Model):
+    quitation = models.ForeignKey(Sup)
