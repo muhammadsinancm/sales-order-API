@@ -11,7 +11,7 @@ class SupplierListCreateView(generics.ListCreateAPIView):
     
 class SupplierDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Supplier.objects.all()
-    serializer_class = SupplierSerializer
+    serializer_class = SupplierSerializer     
     permission_classes = [IsAuthenticated]
     
 class RFQListCreateView(generics.ListCreateAPIView):
