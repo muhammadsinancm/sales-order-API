@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Supplier, RequestForQuotation, RFQItem, SupplierQuotationItem
+from .models import Supplier, RequestForQuotation, RFQItem, SupplierQuotationItem, SupplierQuotation
 from django.db import transaction
 from decimal import Decimal
 
@@ -93,3 +93,52 @@ class SupplierQuotationItemSerializer(serializers.ModelSerializer):
             if value < 0:
                 raise serializers.ValidationError('Tax rate can not be negative.')
             return value
+        
+class SupplierQuotationSerializer(serializers.ModelSerializer):
+    items = SupplierQuotationItemSerializer(many=True)
+    
+    class Meta:
+        model = SupplierQuotation
+        fields = [
+            'id', 'rfq', 'supplier', 'status', 'quotation_number', 'quotation_date', 'valid_until', 'notes', 'items', 'tax', 'grand_total', 'created_at', 'updated_at'
+        ]
+        
+        read_only_fields = [
+            'id', 'status', 'subtotal', 'tax', 'grand_total', 'created_at', 'updated_at'
+        ]
+        
+        @transaction.atomic
+        def create(self, validate_data):
+            items_data = validate_data.pop('items')
+            
+            quotation = SupplierQuotation.objects.create(**validate_data)
+            
+            for item_data in items_data:
+                SupplierQuotationItem.objects.create(quotation=quotation, **item_data)
+                
+            subtotal = sum((item.subtotal for item in quotation.items.all()), Decimal('0'))
+            tax = sum((item.tax for item in quotation.items.all()), Decimal('0'))
+            
+            quotation.subtotal = subtotal
+            quotation.tax = tax
+            quotation.grand_total = subtotal + tax
+            quotation.save()
+
+            return quotation
+        
+        @transaction.atomic
+        def update(self, instance, validated_data):
+            items_data = validated_data.pop('items', None)
+            
+            if items_data is not None:
+                instance.items.all().delete()
+                for item_data in items_data:
+                    SupplierQuotationItem.objects.create(quotation=instance, **item_data)
+                    
+            instance.supplier = validated_data.get('supplier', instance.supplier)
+            instance.status = validated_data.get('status', instance.status)
+            instance.quotation_number = validated_data.get('quotation_number', instance.quotation_number)
+            instance.quotation_date = validated_data.get('quotation_date', instance.quotation_date)
+            instance.valid_until = validated_data.get('valid_until', instance.valid_until)
+            instance.notes = validated_data.get('notes', instance.notes)
+            instance.save()
