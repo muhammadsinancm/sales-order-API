@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Supplier, RequestForQuotation, RFQItem, SupplierQuotation, SupplierQuotationItem
+from .models import Supplier, RequestForQuotation, RFQItem, SupplierQuotationItem
 from django.db import transaction
 from decimal import Decimal
 
