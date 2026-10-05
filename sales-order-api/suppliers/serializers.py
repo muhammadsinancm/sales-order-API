@@ -136,6 +136,7 @@ class SupplierQuotationSerializer(serializers.ModelSerializer):
                     SupplierQuotationItem.objects.create(quotation=instance, **item_data)
                     
             instance.supplier = validated_data.get('supplier', instance.supplier)
+            instance.rfq
             instance.status = validated_data.get('status', instance.status)
             instance.quotation_number = validated_data.get('quotation_number', instance.quotation_number)
             instance.quotation_date = validated_data.get('quotation_date', instance.quotation_date)
