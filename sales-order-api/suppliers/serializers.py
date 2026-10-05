@@ -136,10 +136,20 @@ class SupplierQuotationSerializer(serializers.ModelSerializer):
                     SupplierQuotationItem.objects.create(quotation=instance, **item_data)
                     
             instance.supplier = validated_data.get('supplier', instance.supplier)
-            instance.rfq
-            instance.status = validated_data.get('status', instance.status)
+            instance.rfq = validated_data.get('rfq', instance.rfq)
             instance.quotation_number = validated_data.get('quotation_number', instance.quotation_number)
             instance.quotation_date = validated_data.get('quotation_date', instance.quotation_date)
             instance.valid_until = validated_data.get('valid_until', instance.valid_until)
             instance.notes = validated_data.get('notes', instance.notes)
             instance.save()
+            
+            subtotal = sum((item.subtotal for item in instance.items.all()), Decimal('0'))
+            tax = ((item.tax for item in instance.items.all()), Decimal('0'))
+            
+            instance.subtotal = subtotal
+            instance.tax = tax
+            instance.grand_total = subtotal + tax
+            
+            instance.save()
+            
+            return instance
