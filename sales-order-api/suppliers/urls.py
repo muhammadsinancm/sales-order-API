@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import SupplierListCreateView, SupplierDetailView, RFQListCreateView, RFQDetailView, SupplierQuotationListCreateView, SupplierQuotationDetailView, SupplierQuotationSendView
+from .views import SupplierListCreateView, SupplierDetailView, RFQListCreateView, RFQDetailView, SupplierQuotationListCreateView, SupplierQuotationDetailView, SupplierQuotationSendView, SupplierQuotationAcceptView
 
 urlpatterns = [
     path('rfqs/', RFQListCreateView.as_view(), name='rfq-list-create'),
@@ -7,6 +7,7 @@ urlpatterns = [
     path('quotations/', SupplierQuotationListCreateView.as_view(), name='quotation-List-create'),
     path('quotations/<int:pk>/', SupplierQuotationDetailView.as_view(), name='quotation-detail'),
     path('quotations/<int:pk>/send/', SupplierQuotationSendView.as_view(), name='quotation-send'),
+    path('quotations/<int:pk>/accept/', SupplierQuotationAcceptView.as_view(), name='quotation-accept'),
     path('', SupplierListCreateView.as_view(), name='supplier-list-create'),
     path('<int:pk>/', SupplierDetailView.as_view(), name='supplier-detail')
 ]

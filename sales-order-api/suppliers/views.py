@@ -61,3 +61,24 @@ class SupplierQuotationSendView(generics.GenericAPIView):
         serializer = self.get_serializer(quotation)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class SupplierQuotationAcceptView(generics.GenericAPIView):
+    queryset = SupplierQuotation.objects.all()
+    serializer_class = SupplierQuotationSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, *args, **kwargs):
+        quotation = self.get_object()
+        
+        if quotation.status != 'SENT':
+            return Response(
+                {
+                    'detail' : 'Only a SENT quotation can be accepted.'
+                }, status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        quotation.status = 'ACCEPTED'
+        quotation.save(update_fields=['status', 'updated_at'])
+        serializer = self.get_serializer(quotation)
+        
+        return Response(serializer.data)
