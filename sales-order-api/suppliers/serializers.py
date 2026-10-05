@@ -100,7 +100,7 @@ class SupplierQuotationSerializer(serializers.ModelSerializer):
     class Meta:
         model = SupplierQuotation
         fields = [
-            'id', 'rfq', 'supplier', 'status', 'quotation_number', 'quotation_date', 'valid_until', 'notes', 'items', 'tax', 'grand_total', 'created_at', 'updated_at'
+            'id', 'rfq', 'supplier', 'status', 'quotation_number', 'quotation_date', 'valid_until', 'notes', 'items', 'subtotal', 'tax', 'grand_total', 'created_at', 'updated_at'
         ]
         
         read_only_fields = [
