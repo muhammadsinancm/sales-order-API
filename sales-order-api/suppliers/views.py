@@ -1,4 +1,4 @@
-from rest_framework import generics
+from rest_framework import generics, serializers
 from rest_framework.permissions import IsAuthenticated
 from .models import Supplier, RequestForQuotation, SupplierQuotation
 from .serializers import SupplierQuotationSerializer, SupplierSerializer, RequestForQuotationSerializer
@@ -40,7 +40,24 @@ class SupplierQuotationDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = SupplierQuotationSerializer
     permission_classes = [IsAuthenticated]
     
-class SupplierQuotationSendView(generics.UpdateAPIView):
+class SupplierQuotationSendView(generics.GenericAPIView):
     queryset = SupplierQuotation.objects.all()
     serializer_class = SupplierQuotationSerializer
     permission_classes = [IsAuthenticated]
+    
+    def post(self, request, *args, **kwargs):
+        quotation = self.get_object()
+        
+        if quotation.status != 'DRAFT':
+            return Response(
+                {
+                    'detail' : 'Only a DRAFT quotation can be sent.' 
+                }, status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        quotation.status = 'SENT'
+        quotation.save(update_fields=['status', 'updated_at'])
+        
+        serializer = self.get_serializer(quotation)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
