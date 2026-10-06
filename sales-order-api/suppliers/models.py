@@ -148,6 +148,7 @@ class GoodsReceipt(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
+        
         return self.receipt_number
     
 class GoodReceiptItem(models.Model):
