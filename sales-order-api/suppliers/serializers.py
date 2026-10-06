@@ -1,7 +1,7 @@
 from dataclasses import fields
 from pyexpat import model
 from rest_framework import serializers
-from .models import PurchaseOrder, PurchaseOrderItem, Supplier, RequestForQuotation, RFQItem, SupplierQuotationItem, SupplierQuotation
+from .models import GoodReceiptItem, GoodsReceipt, PurchaseOrder, PurchaseOrderItem, Supplier, RequestForQuotation, RFQItem, SupplierQuotationItem, SupplierQuotation
 from django.db import transaction
 from decimal import Decimal
 
@@ -124,17 +124,7 @@ class SupplierQuotationSerializer(serializers.ModelSerializer):
             SupplierQuotationItem.objects.create(quotation=quotation, **item_data)
         
         self.calculate_totals(quotation)
-        return quotation
-                
-        # subtotal = sum((item.subtotal for item in quotation.items.all()), Decimal('0'))
-        # tax = sum((item.tax for item in quotation.items.all()), Decimal('0'))
-            
-        # quotation.subtotal = subtotal
-        # quotation.tax = tax
-        # quotation.grand_total = subtotal + tax
-        # quotation.save()
-
-        # return quotation
+        return quotation 
         
     @transaction.atomic
     def update(self, instance, validated_data):
@@ -199,3 +189,129 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
                         "Supplier must match quotation supplier."
                     )
                 })
+        
+        if quotation:
+            if quotation.status != 'ACCEPTED':
+                 raise serializers.ValidationError({
+                    "quotation": (
+                        "Only accepted quotations "
+                        "can create purchase orders."
+                    )
+                })
+                
+        return attrs
+    
+    @transaction.atomic
+    def create(self, validated_data):
+        items_data = validated_data.pop('items')
+        purchase_order = PurchaseOrder.objects.create(**validated_data)
+        
+        for item_data in items_data:
+            PurchaseOrderItem.objects.create(purchase_order=purchase_order, **item_data)
+            
+        self.calculate_total(purchase_order)
+        return purchase_order
+    
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        items_data = validated_data.pop('items', None)
+        
+        for field in [
+            "quotation",
+            "supplier",
+            "order_number",
+            "order_date",
+            "expected_date",
+            "notes",
+        ]:
+            if field in validated_data:
+                setattr(instance, field, validated_data[field])
+                
+        instance.save()
+        
+        if items_data is not None:
+            instance.items.all().delete()
+            
+            for intem_data in items_data:
+                PurchaseOrder.objects.create(purchase_order=instance, **items_data)
+        
+        self.calcultate_totals(instance)
+        
+        return instance
+    
+    def calculate_totals(self, order):
+        subtotal = sum((item.subtotal for item in order.items.all()), Decimal('0'))
+        tax = sum((item.tax for item in order.items.all()), Decimal('0'))
+        
+        order.subtotal = subtotal
+        order.tax = tax
+        order.grand_total = subtotal + tax
+        
+        order.save(update_fields=["subtotal","tax","grand_total","updated_at"])
+        
+class GoodReceiptItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GoodReceiptItem
+        fields = [ "id","purchase_order_item","received_quantity","notes"]
+        read_only_fields = ["id"]
+    
+    def validate_received_quantity(self, value):
+        if value <= 0:
+            raise serializers.ValidationError(
+                "Received quantity must be greater than 0."
+            )
+        
+        return value
+    
+class GoodReciptSerializer(serializers.ModelSerializer):
+    items = GoodReceiptItemSerializer(many=True)
+    
+    class Meta:
+        model = GoodsReceipt
+        fields = [ "id","purchase_order","receipt_number","status","received_date","notes","items","created_at","updated_at"]
+        read_only_fields = ["id","status","created_at","updated_at"]
+        
+    @transaction.atomic
+    def create(self, validated_data):
+        items_data = validated_data.pop('items')
+        purchase_order = validated_data[ "purchase_order"]
+        
+        if purchase_order.status not in [
+            "APPROVED",
+            "SENT",
+            "PARTIALLY_RECEIVED"]:
+            
+            raise serializers.ValidationError({
+                "purchase_order": (
+                    "Purchase order cannot receive goods "
+                    "in its current status."
+                )
+            })
+            
+        receipt = GoodsReceipt.objects.create(**validated_data)
+        
+        for item_data in items_data:
+            po_item = item_data[  "purchase_order_item"]
+            received_quantity = item_data["received_quantity"]
+            remaining_quantity = (po_item.qunatity - po_item.received_quantity)
+            
+            if received_quantity > remaining_quantity:
+                raise serializers.ValidationError({
+                    "received_quantity": (
+                        f"Cannot receive more than "
+                        f"remaining quantity "
+                        f"({remaining_quantity})."
+                    )
+                })
+            
+            if (po_item.purchase_order_id != purchase_order.id):
+                 raise serializers.ValidationError({
+                    "purchase_order_item": (
+                        "Item does not belong to "
+                        "this purchase order."
+                    )
+                })
+                 
+            GoodReceiptItem.objects.create(good_receipt=receipt, **item_data)
+        
+        return receipt
