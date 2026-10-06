@@ -82,3 +82,18 @@ class SupplierQuotationAcceptView(generics.GenericAPIView):
         serializer = self.get_serializer(quotation)
         
         return Response(serializer.data)
+    
+class SupplierQuotationRejectView(generics.UpdateAPIView):
+    queryset = SupplierQuotation.objects.all()
+    serializer_class = SupplierQuotationSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def update(self, request, *args, **kwargs):
+        quotation = self.get_object()
+        
+        if quotation.status != 'SENT':
+            return Response(
+                {
+                    'detail' : 'Only a SENT quotation can be rejected.'
+                }
+            )
