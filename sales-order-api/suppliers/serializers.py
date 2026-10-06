@@ -1,5 +1,7 @@
+from dataclasses import fields
+from pyexpat import model
 from rest_framework import serializers
-from .models import Supplier, RequestForQuotation, RFQItem, SupplierQuotationItem, SupplierQuotation
+from .models import PurchaseOrder, PurchaseOrderItem, Supplier, RequestForQuotation, RFQItem, SupplierQuotationItem, SupplierQuotation
 from django.db import transaction
 from decimal import Decimal
 
@@ -155,4 +157,45 @@ class SupplierQuotationSerializer(serializers.ModelSerializer):
             for item_data in items_data:
                  SupplierQuotationItem.objects.create(quotation=instance, **item_data)
                     
+        self.calculate_totals(instance)
         
+        return instance
+    
+    def calculate_total(self, quotation):
+        subtotal = sum((item.subtotal for item in quotation.items.all()), Decimal('0'))
+        tax = sum((item.tax for item in quotation.items.all()), Decimal('0'))
+        quotation.subtotal = subtotal
+        quotation.tax = tax
+        quotation.grand_total = subtotal + tax
+        quotation.save(update_fields=['subtotal', 'tax', 'grand_total', 'updated_at'])
+
+class PurchaseOrderItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PurchaseOrderItem
+        fields = ["id","product","quantity","unit_price","tax_rate","subtotal","tax","total","received_quantity",]
+        read_only_fields = ["id","subtotal","tax","total","received_quantity",]
+    
+    def validate_quantity(self, value):
+        if value <= 0:
+            raise serializers.ValidationError('Quantity must be greater than 0.')
+        return value
+    
+class PurchaseOrderSerializer(serializers.ModelSerializer):
+    items = PurchaseOrderItemSerializer(many=True)
+    
+    class Meta:
+        model = PurchaseOrder
+        fields = [ "id","quotation","supplier","order_number","status","order_date","expected_date","notes","items","subtotal","tax","grand_total","created_at","updated_at"]
+        read_only_fields = ["id","status","subtotal","tax","grand_total","created_at","updated_at"]
+        
+    def validate(self, attrs):
+        quotation = attrs.get('quotation')
+        supplier = attrs.get('supplier')
+        
+        if quotation and supplier:
+            if quotation.supplier_id != supplier.id:
+                 raise serializers.ValidationError({
+                    "supplier": (
+                        "Supplier must match quotation supplier."
+                    )
+                })
