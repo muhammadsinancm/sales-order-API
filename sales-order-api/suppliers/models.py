@@ -131,3 +131,33 @@ class PurchaseOrderItem(models.Model):
             f"{self.product.name} - "
             f"{self.purchase_order.order_number}"
         )
+
+class GoodsReceipt(models.Model):
+    STATUS_CHOICES = [
+        ("DRAFT", "Draft"),
+        ("RECEIVED", "Received"),
+        ("CANCELLED", "Cancelled"),
+    ]
+
+    purchase_order = models.ForeignKey(PurchaseOrder,on_delete=models.PROTECT,related_name="goods_receipts")
+    receipt_number = models.CharField(max_length=100,unique=True)
+    status = models.CharField(max_length=20,choices=STATUS_CHOICES,default="DRAFT")
+    received_date = models.DateField()
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.receipt_number
+    
+class GoodReceiptItem(models.Model):
+    goods_receipt = models.ForeignKey(GoodsReceipt,on_delete=models.CASCADE,related_name="items")
+    purchase_order_item = models.ForeignKey(PurchaseOrderItem,on_delete=models.PROTECT,related_name="receipt_items")
+    received_quantity = models.PositiveIntegerField()
+    notes = models.TextField(blank=True)
+
+    def __str__(self):
+        return (
+            f"{self.purchase_order_item.product.name} - "
+            f"{self.received_quantity}"
+        )
