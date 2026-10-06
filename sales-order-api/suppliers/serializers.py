@@ -263,7 +263,7 @@ class GoodReceiptItemSerializer(serializers.ModelSerializer):
         
         return value
     
-class GoodReciptSerializer(serializers.ModelSerializer):
+class GoodsReceiptSerializer(serializers.ModelSerializer):
     items = GoodReceiptItemSerializer(many=True)
     
     class Meta:
