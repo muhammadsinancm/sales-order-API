@@ -48,7 +48,7 @@ class SupplierQuotation(models.Model):
         ('CANCELLED', 'Cancelled')
     ]
     
-    rfq = models.ForeignKey(RequestForQuotation, on_delete=models.CASCADE, related_name='quotations')
+    rfq = models.ForeignKey(RequestForQuotation, on_delete=models.PROTECT, related_name='quotations')
     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, related_name='quotations')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
     quotation_number = models.CharField(max_length=100, unique=True)
@@ -151,7 +151,7 @@ class GoodsReceipt(models.Model):
         
         return self.receipt_number
     
-class GoodReceiptItem(models.Model):
+class GoodsReceiptItem(models.Model):
     goods_receipt = models.ForeignKey(GoodsReceipt,on_delete=models.CASCADE,related_name="items")
     purchase_order_item = models.ForeignKey(PurchaseOrderItem,on_delete=models.PROTECT,related_name="receipt_items")
     received_quantity = models.PositiveIntegerField()

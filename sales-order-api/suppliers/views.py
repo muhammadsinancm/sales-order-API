@@ -17,7 +17,7 @@ class SupplierDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     
 class RFQListCreateView(generics.ListCreateAPIView):
-    queryset = RequestForQuotation.objects.prefetch_related('supplier').select_related('items__product')
+    queryset = RequestForQuotation.objects.select_related('supplier').prefetch_related('items__product')
     serializer_class = RequestForQuotationSerializer
     permission_classes = [IsAuthenticated]
     
@@ -26,7 +26,7 @@ class RFQListCreateView(generics.ListCreateAPIView):
         serializer.save()
         
 class RFQDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = RequestForQuotation.objects.prefetch_related('supplier').select_related('items__product')
+    queryset = RequestForQuotation.objects.select_related('supplier').prefetch_related('items__product')
     serializer_class = RequestForQuotationSerializer
     permission_classes = [IsAuthenticated]
     
@@ -90,7 +90,7 @@ class SupplierQuotationListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
 class SupplierQuotationDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = SupplierQuotation.objects.select_related('rfq', 'supplier').select_related('items__product')
+    queryset = SupplierQuotation.objects.select_related('rfq', 'supplier').prefetch_related('items__product')
     serializer_class = SupplierQuotationSerializer
     permission_classes = [IsAuthenticated]
     
@@ -137,12 +137,12 @@ class SupplierQuotationAcceptView(generics.UpdateAPIView):
         quotation.status = 'ACCEPTED'
         quotation.save()
         quotation.status = 'RECEIVED'
-        quotation.save()
+        quotation.rfq.save()
         
         return Response(
             {
                 "message": ("Quotation accepted successfully."),
-                "status": quotation.status,
+                "status": 'ACCEPTED',
             }
         )
     
@@ -212,7 +212,7 @@ class PurchaseOrderDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = PurchaseOrderSerializer
     permission_classes = [IsAuthenticated]
     
-class PurchaseOrderAppoveView(generics.UpdateAPIView):
+class PurchaseOrderApproveView(generics.UpdateAPIView):
     queryset = PurchaseOrder.objects.all()
     serializer_class = PurchaseOrderSerializer
     permission_classes = [IsAuthenticated]
@@ -293,7 +293,7 @@ class PurchaseOrderCancelView(generics.UpdateAPIView):
             }
         )
         
-class GoodReceiptListCreateView(generics.ListCreateAPIView):
+class GoodsReceiptListCreateView(generics.ListCreateAPIView):
     queryset = (GoodsReceipt.objects.select_related("purchase_order").prefetch_related("items__purchase_order_item__product"))
     serializer_class = GoodsReceiptSerializer
     permission_classes = [IsAuthenticated]
@@ -302,4 +302,3 @@ class GoodsReceiptDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = (GoodsReceipt.objects.select_related("purchase_order").prefetch_related("items__purchase_order_item__product"))
     serializer_class = GoodsReceiptSerializer
     permission_classes = [IsAuthenticated]
-    

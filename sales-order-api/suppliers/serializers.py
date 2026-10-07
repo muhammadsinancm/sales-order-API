@@ -1,7 +1,5 @@
-from dataclasses import fields
-from pyexpat import model
 from rest_framework import serializers
-from .models import GoodReceiptItem, GoodsReceipt, PurchaseOrder, PurchaseOrderItem, Supplier, RequestForQuotation, RFQItem, SupplierQuotationItem, SupplierQuotation
+from .models import GoodsReceiptItem, GoodsReceipt, PurchaseOrder, PurchaseOrderItem, Supplier, RequestForQuotation, RFQItem, SupplierQuotationItem, SupplierQuotation
 from django.db import transaction
 from decimal import Decimal
 
@@ -151,7 +149,7 @@ class SupplierQuotationSerializer(serializers.ModelSerializer):
         
         return instance
     
-    def calculate_total(self, quotation):
+    def calculate_totals(self, quotation):
         subtotal = sum((item.subtotal for item in quotation.items.all()), Decimal('0'))
         tax = sum((item.tax for item in quotation.items.all()), Decimal('0'))
         quotation.subtotal = subtotal
@@ -209,7 +207,7 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
         for item_data in items_data:
             PurchaseOrderItem.objects.create(purchase_order=purchase_order, **item_data)
             
-        self.calculate_total(purchase_order)
+        self.calculate_totals(purchase_order)
         return purchase_order
     
     @transaction.atomic
@@ -232,10 +230,10 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
         if items_data is not None:
             instance.items.all().delete()
             
-            for intem_data in items_data:
-                PurchaseOrder.objects.create(purchase_order=instance, **items_data)
+            for item_data in items_data:
+                PurchaseOrderItem.objects.create(purchase_order=instance, **item_data)
         
-        self.calcultate_totals(instance)
+        self.calculate_totals(instance)
         
         return instance
     
@@ -249,9 +247,9 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
         
         order.save(update_fields=["subtotal","tax","grand_total","updated_at"])
         
-class GoodReceiptItemSerializer(serializers.ModelSerializer):
+class GoodsReceiptItemSerializer(serializers.ModelSerializer):
     class Meta:
-        model = GoodReceiptItem
+        model = GoodsReceiptItem
         fields = [ "id","purchase_order_item","received_quantity","notes"]
         read_only_fields = ["id"]
     
@@ -264,7 +262,7 @@ class GoodReceiptItemSerializer(serializers.ModelSerializer):
         return value
     
 class GoodsReceiptSerializer(serializers.ModelSerializer):
-    items = GoodReceiptItemSerializer(many=True)
+    items = GoodsReceiptItemSerializer(many=True)
     
     class Meta:
         model = GoodsReceipt
@@ -293,7 +291,7 @@ class GoodsReceiptSerializer(serializers.ModelSerializer):
         for item_data in items_data:
             po_item = item_data[  "purchase_order_item"]
             received_quantity = item_data["received_quantity"]
-            remaining_quantity = (po_item.qunatity - po_item.received_quantity)
+            remaining_quantity = po_item.quantity - po_item.received_quantity
             
             if received_quantity > remaining_quantity:
                 raise serializers.ValidationError({
@@ -312,6 +310,6 @@ class GoodsReceiptSerializer(serializers.ModelSerializer):
                     )
                 })
                  
-            GoodReceiptItem.objects.create(good_receipt=receipt, **item_data)
+            GoodsReceiptItem.objects.create(goods_receipt=receipt, **item_data)
         
         return receipt
