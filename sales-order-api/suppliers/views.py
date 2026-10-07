@@ -1,5 +1,6 @@
 from rest_framework import generics, serializers
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
 from .models import PurchaseOrder, Supplier, RequestForQuotation, SupplierQuotation, GoodsReceipt
 from .serializers import SupplierQuotationSerializer, SupplierSerializer, RequestForQuotationSerializer, PurchaseOrderSerializer, GoodsReceiptSerializer
 from django.db import transaction
@@ -31,56 +32,54 @@ class RFQDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     
 
-class RFQSendView(generics.UpdateAPIView):
-    queryset = RequestForQuotation.objects.all()
-    serializer_class = RequestForQuotationSerializer
+class RFQSendView(APIView):
     permission_classes = [IsAuthenticated]
     
-    def update(self, request, *args, **kwargs):
-        rfq = self.get_object()
+    def post(self, request, *args, **kwargs):
+        rfq = generics.get_object_or_404(RequestForQuotation, pk=kwargs['pk'])
         
-        if rfq.status != 'DRAFT':
-             return Response(
+        if rfq.status != "DRAFT":
+            return Response(
                 {
-                    "detail": ("Only draft RFQs ""can be sent.")
-                },status=status.HTTP_400_BAD_REQUEST
+                    "detail": "Only draft RFQs can be sent."
+                },
+                status=status.HTTP_400_BAD_REQUEST
             )
 
         rfq.status = "SENT"
         rfq.save()
-        
+
         return Response(
             {
                 "message": "RFQ sent successfully.",
                 "status": rfq.status,
-            }
+            },
+            status=status.HTTP_200_OK
         )
         
-class RFQCancelView(generics.UpdateAPIView):
-    queryset = RequestForQuotation.objects.all()
-    serializer_class = RequestForQuotationSerializer
+class RFQCancelView(APIView):
     permission_classes = [IsAuthenticated]
     
-    def update(self, request, *args, **kwargs):
-        rfq = self.get_object()
+    def post(self, request, *args, **kwargs):
+        rfq = generics.get_object_or_404(RequestForQuotation, pk=kwargs['pk'])
 
-        if rfq.status in ["RECEIVED","CANCELLED",]:
+        if rfq.status in ["RECEIVED", "CANCELLED"]:
             return Response(
                 {
-                    "detail": (
-                        "RFQ cannot be cancelled " "in its current status."
-                    )
-                },status=status.HTTP_400_BAD_REQUEST
+                    "detail": "RFQ cannot be cancelled in its current status."
+                },
+                status=status.HTTP_400_BAD_REQUEST
             )
 
         rfq.status = "CANCELLED"
         rfq.save()
-        
+
         return Response(
             {
                 "message": "RFQ cancelled.",
                 "status": rfq.status,
-            }
+            },
+            status=status.HTTP_200_OK
         )
     
     
