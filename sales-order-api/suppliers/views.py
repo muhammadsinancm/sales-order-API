@@ -302,6 +302,26 @@ class GoodsReceiptListCreateView(generics.GenericAPIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
+             
+        purchase_order = receipt.purchase_order
+        
+        if purchase_order.status not in ['APPROVED', 'SENT', 'PARTIALLY_RECEIVED']:
+            return Response(
+                {
+                    "detail": (
+                        "Purchase order cannot receive "
+                        "goods in its current status."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        for receipt_item in receipt.items.all():
+            po_item = (purchase_order.items.select_for_update().get(id=receipt_item.purchase_order_item_id))
+            
+            received_quantity = (receipt_item.received_quantity)
+            
+            remaining_quantity = (po_item.quantity - po_item.received_quantity)
     
 class GoodsReceiptDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = (GoodsReceipt.objects.select_related("purchase_order").prefetch_related("items__purchase_order_item__product"))
