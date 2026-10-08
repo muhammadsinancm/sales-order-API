@@ -283,10 +283,14 @@ class PurchaseOrderCancelView(APIView):
             status=status.HTTP_200_OK
         )
         
-class GoodsReceiptListCreateView(generics.ListCreateAPIView):
+class GoodsReceiptListCreateView(generics.GenericAPIView):
     queryset = (GoodsReceipt.objects.select_related("purchase_order").prefetch_related("items__purchase_order_item__product"))
     serializer_class = GoodsReceiptSerializer
     permission_classes = [IsAuthenticated]
+    
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        receipt = (GoodsReceipt.objects.select_for_update().select_related('purchase_order').prefetch_related('items__purchase_order_item_product').get(pk=kwargs['pk']))
     
 class GoodsReceiptDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = (GoodsReceipt.objects.select_related("purchase_order").prefetch_related("items__purchase_order_item__product"))
