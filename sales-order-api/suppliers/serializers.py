@@ -302,6 +302,17 @@ class GoodsReceiptSerializer(serializers.ModelSerializer):
                         "purchase order."
                     )
                 })
+                
+            remaining_quantity = (po_item.quantity - po_item.received_quantity)
+            
+            if received_quantity > remaining_quantity:
+                raise serializers.ValidationError({
+                    "received_quantity": (
+                        f"Cannot receive more than "
+                        f"remaining quantity "
+                        f"({remaining_quantity})."
+                    )
+                })
                  
             GoodsReceiptItem.objects.create(goods_receipt=receipt, **item_data)
         
