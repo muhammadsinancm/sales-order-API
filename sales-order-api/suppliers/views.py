@@ -206,8 +206,6 @@ class PurchaseOrderDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     
 class PurchaseOrderApproveView(APIView):
-    queryset = PurchaseOrder.objects.all()
-    serializer_class = PurchaseOrderSerializer
     permission_classes = [IsAuthenticated]
     
     def post(self, request, *args, **kwargs):
@@ -228,12 +226,11 @@ class PurchaseOrderApproveView(APIView):
             {
                 "message": ("Purchase order approved."),
                 "status": order.status,
-            }
+            },
+            status=status.HTTP_200_OK
         )
         
-class PurchaseOrderSendView(generics.UpdateAPIView):
-    queryset = PurchaseOrder.objects.all()
-    serializer_class = PurchaseOrderSerializer
+class PurchaseOrderSendView(APIView):
     permission_classes = [IsAuthenticated]
     
     def update(self, request, *args, **kwargs):
