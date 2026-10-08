@@ -1,3 +1,4 @@
+from itertools import product
 from rest_framework import generics, serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -6,6 +7,7 @@ from .serializers import SupplierQuotationSerializer, SupplierSerializer, Reques
 from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import status
+from inventory.models import Inventory, StockTransaction
 
 class SupplierListCreateView(generics.ListCreateAPIView):
     queryset = Supplier.objects.all()
@@ -283,10 +285,94 @@ class PurchaseOrderCancelView(APIView):
             status=status.HTTP_200_OK
         )
         
-class GoodsReceiptListCreateView(generics.ListCreateAPIView):
+class GoodsReceiptListCreateView(generics.GenericAPIView):
     queryset = (GoodsReceipt.objects.select_related("purchase_order").prefetch_related("items__purchase_order_item__product"))
     serializer_class = GoodsReceiptSerializer
     permission_classes = [IsAuthenticated]
+    
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        receipt = (GoodsReceipt.objects.select_for_update().select_related('purchase_order').prefetch_related('items__purchase_order_item_product').get(pk=kwargs['pk']))
+        
+        if receipt.status != 'DRAFT':
+             return Response(
+                {
+                    "detail": (
+                        "Only draft goods receipts "
+                        "can be received."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+             
+        purchase_order = receipt.purchase_order
+        
+        if purchase_order.status not in ['APPROVED', 'SENT', 'PARTIALLY_RECEIVED']:
+            return Response(
+                {
+                    "detail": (
+                        "Purchase order cannot receive "
+                        "goods in its current status."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        for receipt_item in receipt.items.all():
+            po_item = (purchase_order.items.select_for_update().get(id=receipt_item.purchase_order_item_id))
+            received_quantity = (receipt_item.received_quantity)
+            remaining_quantity = (po_item.quantity - po_item.received_quantity)
+            
+            if received_quantity > remaining_quantity:
+                 return Response(
+                    {
+                        "detail": (
+                            f"Cannot receive "
+                            f"{received_quantity} units "
+                            f"of {po_item.product.name}. "
+                            f"Only {remaining_quantity} "
+                            f"units remaining."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            po_item.received_quantity += (received_quantity)
+            po_item.save(update_fields=['received_quantity'])
+            
+            inventory, created = (inventory.objects.select_for.update().fet_or_create(product=po_item.product, default={'quantity': 0}))
+            inventory.quantity += received_quantity
+            inventory.save()
+            
+            StockTransaction.objects.create(product=po_item.product, transaction_type='IN', quantity=received_quantity)
+        
+        receipt.status = 'RECEIVED'
+        receipt.save(update_fields=['status', 'updated_at'])
+        
+        po_item = purchase_order.items.all()
+        
+        all_received = all(item.received_quantity >= item.quantity for item in po_item)
+        
+        any_received = any(item.received_quantity > 0 for item in po_item)
+        
+        if all_received:
+            purchase_order.status = 'RECEIVED'
+        
+        elif any_received:
+            purchase_order.status = 'PARTIALLY_RECEIVED'
+            
+        purchase_order.save(update_fields=['status', 'updated_at'])
+        
+        return Response(
+            {
+                "message": "Goods received successfully.",
+                "receipt_id": receipt.id,
+                "receipt_status": receipt.status,
+                "purchase_order_id": purchase_order.id,
+                "purchase_order_status": purchase_order.status,
+            },
+            status=status.HTTP_200_OK
+        )
     
 class GoodsReceiptDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = (GoodsReceipt.objects.select_related("purchase_order").prefetch_related("items__purchase_order_item__product"))
