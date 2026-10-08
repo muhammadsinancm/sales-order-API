@@ -163,7 +163,7 @@ class SupplierQuotationRejectView(generics.UpdateAPIView):
                 "message": ("Quotation rejected."),
                 "status": quotation.status,
             },
-            status
+            status=status.HTTP_200_OK
         )
         
 class SupplierQuotationCancelView(generics.UpdateAPIView):
