@@ -337,6 +337,10 @@ class GoodsReceiptListCreateView(generics.GenericAPIView):
             
             po_item.received_quantity += (received_quantity)
             po_item.save(update_fields=['received_quantity'])
+            
+            inventory, created = (inventory.objects.select_for.update().fet_or_create(product=po_item.product, default={'quantity': 0}))
+            inventory.quantity += received_quantity
+            inventory.save()
     
 class GoodsReceiptDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = (GoodsReceipt.objects.select_related("purchase_order").prefetch_related("items__purchase_order_item__product"))
