@@ -142,7 +142,7 @@ class SupplierQuotationAcceptView(APIView):
             status=status.HTTP_200_OK
         )
     
-class SupplierQuotationRejectView(generics.UpdateAPIView):
+class SupplierQuotationRejectView(APIView):
     permission_classes = [IsAuthenticated]
     
     def update(self, request, *args, **kwargs):
@@ -166,7 +166,7 @@ class SupplierQuotationRejectView(generics.UpdateAPIView):
             status=status.HTTP_200_OK
         )
         
-class SupplierQuotationCancelView(generics.UpdateAPIView):
+class SupplierQuotationCancelView(APIView):
     permission_classes = [IsAuthenticated]
     
     def update(self, request, *args, **kwargs):
