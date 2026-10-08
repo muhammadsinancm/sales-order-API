@@ -292,9 +292,7 @@ class GoodsReceiptSerializer(serializers.ModelSerializer):
         for item_data in items_data:
             po_item = item_data[  "purchase_order_item"]
             received_quantity = item_data["received_quantity"]
-            
-            # remaining_quantity = po_item.quantity - po_item.received_quantity
-            
+                        
             if po_item.purchase_order_id != purchase_order.id:
                 raise serializers.ValidationError({
                     "purchase_order_item": (
