@@ -285,14 +285,24 @@ class PurchaseOrderCancelView(APIView):
             status=status.HTTP_200_OK
         )
         
-class GoodsReceiptListCreateView(generics.GenericAPIView):
+class GoodsReceiptListCreateView(generics.ListCreateAPIView):
+    queryset = (GoodsReceipt.objects.select_related("purchase_order").prefetch_related("items__purchase_order_item__product"))
+    serializer_class = GoodsReceiptSerializer
+    permission_classes = [IsAuthenticated]
+    
+class GoodsReceiptDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = (GoodsReceipt.objects.select_related("purchase_order").prefetch_related("items__purchase_order_item__product"))
+    serializer_class = GoodsReceiptSerializer
+    permission_classes = [IsAuthenticated]
+    
+class GoodsReceiptReceiveView(generics.GenericAPIView):
     queryset = (GoodsReceipt.objects.select_related("purchase_order").prefetch_related("items__purchase_order_item__product"))
     serializer_class = GoodsReceiptSerializer
     permission_classes = [IsAuthenticated]
     
     @transaction.atomic
     def post(self, request, *args, **kwargs):
-        receipt = (GoodsReceipt.objects.select_for_update().select_related('purchase_order').prefetch_related('items__purchase_order_item_product').get(pk=kwargs['pk']))
+        receipt = (GoodsReceipt.objects.select_for_update().select_related('purchase_order').prefetch_related('items__purchase_order_item__product').get(pk=kwargs['pk']))
         
         if receipt.status != 'DRAFT':
              return Response(
@@ -340,7 +350,7 @@ class GoodsReceiptListCreateView(generics.GenericAPIView):
             po_item.received_quantity += (received_quantity)
             po_item.save(update_fields=['received_quantity'])
             
-            inventory, created = (inventory.objects.select_for.update().fet_or_create(product=po_item.product, default={'quantity': 0}))
+            inventory, created = (Inventory.objects.select_for_update().get_or_create(product=po_item.product, defaults={'quantity': 0}))
             inventory.quantity += received_quantity
             inventory.save()
             
@@ -373,8 +383,3 @@ class GoodsReceiptListCreateView(generics.GenericAPIView):
             },
             status=status.HTTP_200_OK
         )
-    
-class GoodsReceiptDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = (GoodsReceipt.objects.select_related("purchase_order").prefetch_related("items__purchase_order_item__product"))
-    serializer_class = GoodsReceiptSerializer
-    permission_classes = [IsAuthenticated]

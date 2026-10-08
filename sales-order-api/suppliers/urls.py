@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import ( PurchaseOrderApproveView, PurchaseOrderCancelView, PurchaseOrderDetailView, PurchaseOrderListCreateView, PurchaseOrderSendView, SupplierListCreateView, SupplierDetailView, RFQListCreateView, RFQDetailView, RFQSendView, RFQCancelView, SupplierQuotationListCreateView, SupplierQuotationDetailView, SupplierQuotationSendView, SupplierQuotationAcceptView, SupplierQuotationRejectView, SupplierQuotationCancelView, GoodsReceiptListCreateView, GoodsReceiptDetailView)
+from .views import ( PurchaseOrderApproveView, PurchaseOrderCancelView, PurchaseOrderDetailView, PurchaseOrderListCreateView, PurchaseOrderSendView, SupplierListCreateView, SupplierDetailView, RFQListCreateView, RFQDetailView, RFQSendView, RFQCancelView, SupplierQuotationListCreateView, SupplierQuotationDetailView, SupplierQuotationSendView, SupplierQuotationAcceptView, SupplierQuotationRejectView, SupplierQuotationCancelView, GoodsReceiptListCreateView, GoodsReceiptDetailView, GoodsReceiptReceiveView)
 
 urlpatterns = [
     path('', SupplierListCreateView.as_view(), name='supplier-list-create'),
@@ -20,5 +20,6 @@ urlpatterns = [
     path("purchase-orders/<int:pk>/send/", PurchaseOrderSendView.as_view(), name="purchase-order-send"),
     path("purchase-orders/<int:pk>/cancel/", PurchaseOrderCancelView.as_view(), name="parchase-order-cancel"),
     path("goods-receipts/", GoodsReceiptListCreateView.as_view(), name="goods-receipt-liset-create"),
-    path("goods-receipts/<int:pk>/", GoodsReceiptDetailView.as_view(), name="goods-receipt-detail")
+    path("goods-receipts/<int:pk>/", GoodsReceiptDetailView.as_view(), name="goods-receipt-detail"),
+    path('goods-receipts/<int:pk>/receive/', GoodsReceiptReceiveView.as_view(), name='goods-receipt-receive')
 ]
