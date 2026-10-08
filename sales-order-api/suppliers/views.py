@@ -290,6 +290,16 @@ class GoodsReceiptListCreateView(generics.GenericAPIView):
     serializer_class = GoodsReceiptSerializer
     permission_classes = [IsAuthenticated]
     
+class GoodsReceiptDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = (GoodsReceipt.objects.select_related("purchase_order").prefetch_related("items__purchase_order_item__product"))
+    serializer_class = GoodsReceiptSerializer
+    permission_classes = [IsAuthenticated]
+    
+class GoodsReceiptReceiveView(generics.GenericAPIView):
+    queryset = (GoodsReceipt.objects.select_related("purchase_order").prefetch_related("items__purchase_order_item__product"))
+    serializer_class = GoodsReceiptSerializer
+    permission_classes = [IsAuthenticated]
+    
     @transaction.atomic
     def post(self, request, *args, **kwargs):
         receipt = (GoodsReceipt.objects.select_for_update().select_related('purchase_order').prefetch_related('items__purchase_order_item_product').get(pk=kwargs['pk']))
@@ -373,8 +383,3 @@ class GoodsReceiptListCreateView(generics.GenericAPIView):
             },
             status=status.HTTP_200_OK
         )
-    
-class GoodsReceiptDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = (GoodsReceipt.objects.select_related("purchase_order").prefetch_related("items__purchase_order_item__product"))
-    serializer_class = GoodsReceiptSerializer
-    permission_classes = [IsAuthenticated]
