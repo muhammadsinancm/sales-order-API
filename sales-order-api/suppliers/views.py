@@ -116,7 +116,7 @@ class SupplierQuotationSendView(APIView):
             }
         )
 
-class SupplierQuotationAcceptView(generics.UpdateAPIView):
+class SupplierQuotationAcceptView(APIView):
     permission_classes = [IsAuthenticated]
     
     def post(self, request, *args, **kwargs):
