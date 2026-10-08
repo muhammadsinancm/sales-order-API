@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from .models import GoodsReceiptItem, GoodsReceipt, PurchaseOrder, PurchaseOrderItem, Supplier, RequestForQuotation, RFQItem, SupplierQuotationItem, SupplierQuotation
 from django.db import transaction
 from decimal import Decimal
@@ -291,7 +292,16 @@ class GoodsReceiptSerializer(serializers.ModelSerializer):
         for item_data in items_data:
             po_item = item_data[  "purchase_order_item"]
             received_quantity = item_data["received_quantity"]
-            remaining_quantity = po_item.quantity - po_item.received_quantity
+                        
+            if po_item.purchase_order_id != purchase_order.id:
+                raise serializers.ValidationError({
+                    "purchase_order_item": (
+                        "Item does not belong to this "
+                        "purchase order."
+                    )
+                })
+                
+            remaining_quantity = (po_item.quantity - po_item.received_quantity)
             
             if received_quantity > remaining_quantity:
                 raise serializers.ValidationError({
@@ -299,14 +309,6 @@ class GoodsReceiptSerializer(serializers.ModelSerializer):
                         f"Cannot receive more than "
                         f"remaining quantity "
                         f"({remaining_quantity})."
-                    )
-                })
-            
-            if (po_item.purchase_order_id != purchase_order.id):
-                 raise serializers.ValidationError({
-                    "purchase_order_item": (
-                        "Item does not belong to "
-                        "this purchase order."
                     )
                 })
                  
