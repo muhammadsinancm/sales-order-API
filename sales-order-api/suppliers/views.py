@@ -94,8 +94,6 @@ class SupplierQuotationDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     
 class SupplierQuotationSendView(generics.UpdateAPIView):
-    queryset = SupplierQuotation.objects.all()
-    serializer_class = SupplierQuotationSerializer
     permission_classes = [IsAuthenticated]
     
     def post(self, request, *args, **kwargs):
