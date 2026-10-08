@@ -350,7 +350,7 @@ class GoodsReceiptReceiveView(generics.GenericAPIView):
             po_item.received_quantity += (received_quantity)
             po_item.save(update_fields=['received_quantity'])
             
-            inventory, created = (inventory.objects.select_for.update().fet_or_create(product=po_item.product, default={'quantity': 0}))
+            inventory, created = (Inventory.objects.select_for_update().get_or_create(product=po_item.product, defaults={'quantity': 0}))
             inventory.quantity += received_quantity
             inventory.save()
             
