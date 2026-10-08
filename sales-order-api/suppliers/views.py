@@ -131,7 +131,7 @@ class SupplierQuotationAcceptView(APIView):
             
         quotation.status = 'ACCEPTED'
         quotation.save()
-        quotation.req.status = 'RECEIVED'
+        quotation.rfq.status = 'RECEIVED'
         quotation.rfq.save()
         
         return Response(
