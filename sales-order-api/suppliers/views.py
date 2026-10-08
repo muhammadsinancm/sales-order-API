@@ -62,26 +62,42 @@ class RFQSendView(APIView):
             status=status.HTTP_200_OK
         )
         
-class RFQCancelView(APIView):
+class RFQCancelView(generics.GenericAPIView):
+    queryset = RequestForQuotation.objects.all()
+    serializer_class = RequestForQuotationSerializer
     permission_classes = [IsAuthenticated]
     
     def post(self, request, *args, **kwargs):
-        rfq = generics.get_object_or_404(RequestForQuotation, pk=kwargs['pk'])
+        rfq = self.get_object()
 
-        if rfq.status in ["RECEIVED", "CANCELLED"]:
+        if rfq.status == "CANCELLED":
             return Response(
                 {
-                    "detail": "RFQ cannot be cancelled in its current status."
+                    "detail": "RFQ is already cancelled."
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        if rfq.status not in ["DRAFT", "SENT"]:
+            return Response(
+                {
+                    "detail": (
+                        "Only draft or sent RFQs "
+                        "can be cancelled."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
         rfq.status = "CANCELLED"
-        rfq.save()
-
+        rfq.save(update_fields=["status", "updated_at"])
+        
+        create_audit_log(user=request.user, action='REQ_CANCELLED', entity_type='RFQ', entity_id=rfq.id, details={'status': rfq.status, 'supplier_id': rfq.supplier_id})
+        
         return Response(
             {
-                "message": "RFQ cancelled.",
+                "message": "RFQ cancelled successfully.",
+                "rfq_id": rfq.id,
                 "status": rfq.status,
             },
             status=status.HTTP_200_OK
