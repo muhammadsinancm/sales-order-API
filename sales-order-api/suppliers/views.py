@@ -139,7 +139,7 @@ class SupplierQuotationAcceptView(generics.UpdateAPIView):
                 "message": ("Quotation accepted successfully."),
                 "status": 'ACCEPTED',
             },
-            
+            status=status.HTTP_200_OK
         )
     
 class SupplierQuotationRejectView(generics.UpdateAPIView):
