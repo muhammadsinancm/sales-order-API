@@ -120,7 +120,7 @@ class SupplierQuotationAcceptView(generics.UpdateAPIView):
     queryset = SupplierQuotation.objects.all()
     
     def post(self, request, *args, **kwargs):
-        quotation = 
+        quotation = SupplierQuotation.objects.get(pk=kwargs['pk'])
         
         if quotation.status != 'SENT':
             return Response(
@@ -131,14 +131,15 @@ class SupplierQuotationAcceptView(generics.UpdateAPIView):
             
         quotation.status = 'ACCEPTED'
         quotation.save()
-        quotation.status = 'RECEIVED'
+        quotation.req.status = 'RECEIVED'
         quotation.rfq.save()
         
         return Response(
             {
                 "message": ("Quotation accepted successfully."),
                 "status": 'ACCEPTED',
-            }
+            },
+            
         )
     
 class SupplierQuotationRejectView(generics.UpdateAPIView):
