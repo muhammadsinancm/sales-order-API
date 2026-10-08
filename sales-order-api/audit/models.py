@@ -14,18 +14,18 @@ class AuditLog(models.Model):
         ("RFQ_CANCELLED", "RFQ Cancelled"),
 
        # Supplier Quotation
-      ("QUOTATION_SENT", "Quotation Sent"),
-      ("QUOTATION_ACCEPTED", "Quotation Accepted"),
-      ("QUOTATION_REJECTED", "Quotation Rejected"),
-      ("QUOTATION_CANCELLED", "Quotation Cancelled"),
+       ("QUOTATION_SENT", "Quotation Sent"),
+       ("QUOTATION_ACCEPTED", "Quotation Accepted"),
+       ("QUOTATION_REJECTED", "Quotation Rejected"),
+       ("QUOTATION_CANCELLED", "Quotation Cancelled"),
 
-      # Purchase Order
-      ("PURCHASE_ORDER_APPROVED", "Purchase Order Approved"),
-      ("PURCHASE_ORDER_SENT", "Purchase Order Sent"),
-      ("PURCHASE_ORDER_CANCELLED", "Purchase Order Cancelled"),
+       # Purchase Order
+       ("PURCHASE_ORDER_APPROVED", "Purchase Order Approved"),
+       ("PURCHASE_ORDER_SENT", "Purchase Order Sent"),
+       ("PURCHASE_ORDER_CANCELLED", "Purchase Order Cancelled"),
 
-      # Goods Receipt
-      ("GOODS_RECEIVED", "Goods Received"),
+       # Goods Receipt
+       ("GOODS_RECEIVED", "Goods Received"),
     ]
     
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='audit_logs')
