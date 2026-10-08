@@ -268,7 +268,7 @@ class PurchaseOrderCancelView(APIView):
 
             return Response(
                 {
-                    "detail": ("Purchase order cannot " "be cancelled.")
+                    "detail": ("Purchase order cannot " "be cancelled."),
                 }, status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -278,7 +278,6 @@ class PurchaseOrderCancelView(APIView):
         return Response(
             {
                 "message": ("Purchase order cancelled."),
-                "status": order.status,
             }
         )
         
