@@ -146,7 +146,7 @@ class SupplierQuotationRejectView(generics.UpdateAPIView):
     permission_classes = [IsAuthenticated]
     
     def update(self, request, *args, **kwargs):
-        quotation =
+        quotation = SupplierQuotation.objects.get(pk=kwargs['pk'])
         
         if quotation.status != 'SENT':
             return Response(
@@ -162,7 +162,8 @@ class SupplierQuotationRejectView(generics.UpdateAPIView):
             {
                 "message": ("Quotation rejected."),
                 "status": quotation.status,
-            }
+            },
+            status
         )
         
 class SupplierQuotationCancelView(generics.UpdateAPIView):
