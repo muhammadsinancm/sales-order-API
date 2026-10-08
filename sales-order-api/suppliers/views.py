@@ -82,12 +82,11 @@ class RFQCancelView(APIView):
             status=status.HTTP_200_OK
         )
     
-    
 class SupplierQuotationListCreateView(generics.ListCreateAPIView):
     queryset = SupplierQuotation.objects.select_related('rfq', 'supplier').prefetch_related('items__product')
     serializer_class = SupplierQuotationSerializer
     permission_classes = [IsAuthenticated]
-
+    
 class SupplierQuotationDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = SupplierQuotation.objects.select_related('rfq', 'supplier').prefetch_related('items__product')
     serializer_class = SupplierQuotationSerializer
@@ -206,13 +205,11 @@ class PurchaseOrderDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = PurchaseOrderSerializer
     permission_classes = [IsAuthenticated]
     
-class PurchaseOrderApproveView(generics.UpdateAPIView):
-    queryset = PurchaseOrder.objects.all()
-    serializer_class = PurchaseOrderSerializer
+class PurchaseOrderApproveView(APIView):
     permission_classes = [IsAuthenticated]
     
-    def update(self, request, *args, **kwargs):
-        order =self.get_object()
+    def post(self, request, *args, **kwargs):
+        order = PurchaseOrder.objects.get(pk=kwargs['pk'])
         
         if order.status != 'DRAFT':
             return Response(
@@ -229,16 +226,15 @@ class PurchaseOrderApproveView(generics.UpdateAPIView):
             {
                 "message": ("Purchase order approved."),
                 "status": order.status,
-            }
+            },
+            status=status.HTTP_200_OK
         )
         
-class PurchaseOrderSendView(generics.UpdateAPIView):
-    queryset = PurchaseOrder.objects.all()
-    serializer_class = PurchaseOrderSerializer
+class PurchaseOrderSendView(APIView):
     permission_classes = [IsAuthenticated]
     
-    def update(self, request, *args, **kwargs):
-        order = self.get_object()
+    def post(self, request, *args, **kwargs):
+        order = PurchaseOrder.objects.get(pk=kwargs['pk'])
 
         if order.status != "APPROVED":
 
@@ -255,16 +251,15 @@ class PurchaseOrderSendView(generics.UpdateAPIView):
             {
                 "message": ("Purchase order sent."),
                 "status": order.status,
-            }
+            },
+            status=status.HTTP_200_OK
         )
         
-class PurchaseOrderCancelView(generics.UpdateAPIView):
-    queryset = PurchaseOrder.objects.all()
-    serializer_class = PurchaseOrderSerializer
+class PurchaseOrderCancelView(APIView):
     permission_classes = [IsAuthenticated]
     
     def update(self, request, *args, **kwargs):
-        order = self.get_object()
+        order = PurchaseOrder.objects.get(pk=kwargs['pk'])
 
         if order.status in [
             "RECEIVED",
@@ -273,7 +268,7 @@ class PurchaseOrderCancelView(generics.UpdateAPIView):
 
             return Response(
                 {
-                    "detail": ("Purchase order cannot " "be cancelled.")
+                    "detail": ("Purchase order cannot " "be cancelled."),
                 }, status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -284,7 +279,8 @@ class PurchaseOrderCancelView(generics.UpdateAPIView):
             {
                 "message": ("Purchase order cancelled."),
                 "status": order.status,
-            }
+            },
+            status=status.HTTP_200_OK
         )
         
 class GoodsReceiptListCreateView(generics.ListCreateAPIView):
