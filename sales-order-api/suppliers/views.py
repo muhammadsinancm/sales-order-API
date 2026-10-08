@@ -97,7 +97,7 @@ class SupplierQuotationSendView(APIView):
     permission_classes = [IsAuthenticated]
     
     def post(self, request, *args, **kwargs):
-        quotation = self.get_object()
+        quotation = SupplierQuotation.objects.get(pk=kwargs['pk'])
         
         if quotation.status != 'DRAFT':
             return Response(
