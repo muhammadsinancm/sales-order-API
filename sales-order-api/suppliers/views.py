@@ -291,6 +291,17 @@ class GoodsReceiptListCreateView(generics.GenericAPIView):
     @transaction.atomic
     def post(self, request, *args, **kwargs):
         receipt = (GoodsReceipt.objects.select_for_update().select_related('purchase_order').prefetch_related('items__purchase_order_item_product').get(pk=kwargs['pk']))
+        
+        if receipt.status != 'DRAFT':
+             return Response(
+                {
+                    "detail": (
+                        "Only draft goods receipts "
+                        "can be received."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
     
 class GoodsReceiptDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = (GoodsReceipt.objects.select_related("purchase_order").prefetch_related("items__purchase_order_item__product"))
