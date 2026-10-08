@@ -145,7 +145,7 @@ class SupplierQuotationAcceptView(APIView):
 class SupplierQuotationRejectView(APIView):
     permission_classes = [IsAuthenticated]
     
-    def update(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         quotation = SupplierQuotation.objects.get(pk=kwargs['pk'])
         
         if quotation.status != 'SENT':
@@ -169,7 +169,7 @@ class SupplierQuotationRejectView(APIView):
 class SupplierQuotationCancelView(APIView):
     permission_classes = [IsAuthenticated]
     
-    def update(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         quotation = SupplierQuotation.objects.get(pk=kwargs['pk'])
         
         if quotation.status in [ "ACCEPTED",
