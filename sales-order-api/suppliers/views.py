@@ -192,7 +192,8 @@ class SupplierQuotationCancelView(generics.UpdateAPIView):
             {
                 "message": "Quotation cancelled.",
                 "status": quotation.status,
-            }
+            },
+            status=status.HTTP_200_OK
         )
         
 class PurchaseOrderListCreateView(generics.ListCreateAPIView):
