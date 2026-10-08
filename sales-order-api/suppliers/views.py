@@ -345,6 +345,34 @@ class GoodsReceiptListCreateView(generics.GenericAPIView):
             inventory.save()
             
             StockTransaction.objects.create(product=po_item.product, transaction_type='IN', quantity=received_quantity)
+        
+        receipt.status = 'RECEIVED'
+        receipt.save(update_fields=['status', 'updated_at'])
+        
+        po_item = purchase_order.items.all()
+        
+        all_received = all(item.received_quantity >= item.quantity for item in po_item)
+        
+        any_received = any(item.received_quantity > 0 for item in po_item)
+        
+        if all_received:
+            purchase_order.status = 'RECEIVED'
+        
+        elif any_received:
+            purchase_order.status = 'PARTIALLY_RECEIVED'
+            
+        purchase_order.save(update_fields=['status', 'updated_at'])
+        
+        return Response(
+            {
+                "message": "Goods received successfully.",
+                "receipt_id": receipt.id,
+                "receipt_status": receipt.status,
+                "purchase_order_id": purchase_order.id,
+                "purchase_order_status": purchase_order.status,
+            },
+            status=status.HTTP_200_OK
+        )
     
 class GoodsReceiptDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = (GoodsReceipt.objects.select_related("purchase_order").prefetch_related("items__purchase_order_item__product"))
