@@ -8,6 +8,7 @@ from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import status
 from inventory.models import Inventory, StockTransaction
+from audit.utils import create_audit_log
 
 class SupplierListCreateView(generics.ListCreateAPIView):
     queryset = Supplier.objects.all()
@@ -47,9 +48,11 @@ class RFQSendView(APIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
-
+        
         rfq.status = "SENT"
         rfq.save()
+            
+        create_audit_log(user=request.user, action='RFQ_SENT', entity_type='RFQ', entity_id=rfq.id, details={'supplier_id': rfq.supplier_id, 'status': rfq.status})
 
         return Response(
             {
