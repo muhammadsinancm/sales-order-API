@@ -116,7 +116,7 @@ class SupplierQuotationSendView(APIView):
             }
         )
 
-class SupplierQuotationAcceptView(generics.UpdateAPIView):
+class SupplierQuotationAcceptView(APIView):
     permission_classes = [IsAuthenticated]
     
     def post(self, request, *args, **kwargs):
@@ -142,10 +142,10 @@ class SupplierQuotationAcceptView(generics.UpdateAPIView):
             status=status.HTTP_200_OK
         )
     
-class SupplierQuotationRejectView(generics.UpdateAPIView):
+class SupplierQuotationRejectView(APIView):
     permission_classes = [IsAuthenticated]
     
-    def update(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         quotation = SupplierQuotation.objects.get(pk=kwargs['pk'])
         
         if quotation.status != 'SENT':
@@ -166,10 +166,10 @@ class SupplierQuotationRejectView(generics.UpdateAPIView):
             status=status.HTTP_200_OK
         )
         
-class SupplierQuotationCancelView(generics.UpdateAPIView):
+class SupplierQuotationCancelView(APIView):
     permission_classes = [IsAuthenticated]
     
-    def update(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         quotation = SupplierQuotation.objects.get(pk=kwargs['pk'])
         
         if quotation.status in [ "ACCEPTED",
