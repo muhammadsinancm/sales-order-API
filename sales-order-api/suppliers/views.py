@@ -93,13 +93,11 @@ class SupplierQuotationDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = SupplierQuotationSerializer
     permission_classes = [IsAuthenticated]
     
-class SupplierQuotationSendView(generics.UpdateAPIView):
-    queryset = SupplierQuotation.objects.all()
-    serializer_class = SupplierQuotationSerializer
+class SupplierQuotationSendView(APIView):
     permission_classes = [IsAuthenticated]
     
     def post(self, request, *args, **kwargs):
-        quotation = self.get_object()
+        quotation = SupplierQuotation.objects.get(pk=kwargs['pk'])
         
         if quotation.status != 'DRAFT':
             return Response(
@@ -119,12 +117,10 @@ class SupplierQuotationSendView(generics.UpdateAPIView):
         )
 
 class SupplierQuotationAcceptView(generics.UpdateAPIView):
-    queryset = SupplierQuotation.objects.all()
-    serializer_class = SupplierQuotationSerializer
     permission_classes = [IsAuthenticated]
     
     def post(self, request, *args, **kwargs):
-        quotation = self.get_object()
+        quotation = SupplierQuotation.objects.get(pk=kwargs['pk'])
         
         if quotation.status != 'SENT':
             return Response(
@@ -135,23 +131,22 @@ class SupplierQuotationAcceptView(generics.UpdateAPIView):
             
         quotation.status = 'ACCEPTED'
         quotation.save()
-        quotation.status = 'RECEIVED'
+        quotation.req.status = 'RECEIVED'
         quotation.rfq.save()
         
         return Response(
             {
                 "message": ("Quotation accepted successfully."),
                 "status": 'ACCEPTED',
-            }
+            },
+            status=status.HTTP_200_OK
         )
     
 class SupplierQuotationRejectView(generics.UpdateAPIView):
-    queryset = SupplierQuotation.objects.all()
-    serializer_class = SupplierQuotationSerializer
     permission_classes = [IsAuthenticated]
     
     def update(self, request, *args, **kwargs):
-        quotation = self.get_object()
+        quotation = SupplierQuotation.objects.get(pk=kwargs['pk'])
         
         if quotation.status != 'SENT':
             return Response(
@@ -167,16 +162,15 @@ class SupplierQuotationRejectView(generics.UpdateAPIView):
             {
                 "message": ("Quotation rejected."),
                 "status": quotation.status,
-            }
+            },
+            status=status.HTTP_200_OK
         )
         
 class SupplierQuotationCancelView(generics.UpdateAPIView):
-    queryset = SupplierQuotation.objects.all()
-    serializer_class = SupplierQuotationSerializer
     permission_classes = [IsAuthenticated]
     
     def update(self, request, *args, **kwargs):
-        quotation = self.get_object()
+        quotation = SupplierQuotation.objects.get(pk=kwargs['pk'])
         
         if quotation.status in [ "ACCEPTED",
             "CANCELLED"]:
@@ -198,7 +192,8 @@ class SupplierQuotationCancelView(generics.UpdateAPIView):
             {
                 "message": "Quotation cancelled.",
                 "status": quotation.status,
-            }
+            },
+            status=status.HTTP_200_OK
         )
         
 class PurchaseOrderListCreateView(generics.ListCreateAPIView):
