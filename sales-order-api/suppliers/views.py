@@ -318,10 +318,25 @@ class GoodsReceiptListCreateView(generics.GenericAPIView):
 
         for receipt_item in receipt.items.all():
             po_item = (purchase_order.items.select_for_update().get(id=receipt_item.purchase_order_item_id))
-            
             received_quantity = (receipt_item.received_quantity)
-            
             remaining_quantity = (po_item.quantity - po_item.received_quantity)
+            
+            if received_quantity > remaining_quantity:
+                 return Response(
+                    {
+                        "detail": (
+                            f"Cannot receive "
+                            f"{received_quantity} units "
+                            f"of {po_item.product.name}. "
+                            f"Only {remaining_quantity} "
+                            f"units remaining."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            po_item.received_quantity += (received_quantity)
+            po_item.save(update_fields=['received_quantity'])
     
 class GoodsReceiptDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = (GoodsReceipt.objects.select_related("purchase_order").prefetch_related("items__purchase_order_item__product"))
