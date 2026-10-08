@@ -143,12 +143,10 @@ class SupplierQuotationAcceptView(generics.UpdateAPIView):
         )
     
 class SupplierQuotationRejectView(generics.UpdateAPIView):
-    queryset = SupplierQuotation.objects.all()
-    serializer_class = SupplierQuotationSerializer
     permission_classes = [IsAuthenticated]
     
     def update(self, request, *args, **kwargs):
-        quotation = self.get_object()
+        quotation =
         
         if quotation.status != 'SENT':
             return Response(
