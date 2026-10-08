@@ -258,7 +258,7 @@ class PurchaseOrderSendView(APIView):
 class PurchaseOrderCancelView(APIView):
     permission_classes = [IsAuthenticated]
     
-    def update(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         order = PurchaseOrder.objects.get(pk=kwargs['pk'])
 
         if order.status in [
