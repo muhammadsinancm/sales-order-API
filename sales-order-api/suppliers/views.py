@@ -233,8 +233,8 @@ class PurchaseOrderApproveView(APIView):
 class PurchaseOrderSendView(APIView):
     permission_classes = [IsAuthenticated]
     
-    def update(self, request, *args, **kwargs):
-        order = self.get_object()
+    def post(self, request, *args, **kwargs):
+        order = PurchaseOrder.objects.get(pk=kwargs['pk'])
 
         if order.status != "APPROVED":
 
@@ -251,16 +251,15 @@ class PurchaseOrderSendView(APIView):
             {
                 "message": ("Purchase order sent."),
                 "status": order.status,
-            }
+            },
+            status=status.HTTP_200_OK
         )
         
-class PurchaseOrderCancelView(generics.UpdateAPIView):
-    queryset = PurchaseOrder.objects.all()
-    serializer_class = PurchaseOrderSerializer
+class PurchaseOrderCancelView(APIView):
     permission_classes = [IsAuthenticated]
     
     def update(self, request, *args, **kwargs):
-        order = self.get_object()
+        order = PurchaseOrder.objects.get(pk=kwargs['pk'])
 
         if order.status in [
             "RECEIVED",
