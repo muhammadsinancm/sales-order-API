@@ -1,3 +1,4 @@
+from itertools import product
 from rest_framework import generics, serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -6,6 +7,7 @@ from .serializers import SupplierQuotationSerializer, SupplierSerializer, Reques
 from django.db import transaction
 from rest_framework.response import Response
 from rest_framework import status
+from inventory.models import Inventory, StockTransaction
 
 class SupplierListCreateView(generics.ListCreateAPIView):
     queryset = Supplier.objects.all()
@@ -341,6 +343,8 @@ class GoodsReceiptListCreateView(generics.GenericAPIView):
             inventory, created = (inventory.objects.select_for.update().fet_or_create(product=po_item.product, default={'quantity': 0}))
             inventory.quantity += received_quantity
             inventory.save()
+            
+            StockTransaction.objects.create(product=po_item.product, transaction_type='IN', quantity=received_quantity)
     
 class GoodsReceiptDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = (GoodsReceipt.objects.select_related("purchase_order").prefetch_related("items__purchase_order_item__product"))
